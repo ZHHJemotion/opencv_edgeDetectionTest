@@ -28,7 +28,8 @@ int cannyLowThreshold = 1; // TrackBar位置参数
 
 // Laplace（算子）边缘检测相关变量
 //Mat laplaceDetectedEdges; // Laplace检测出的边缘
-Mat dstLaplaceImage, dstAbsLaplaceImage; // Laplace 算子输出图和8-bit 输出图
+Mat dstLaplaceImageGaussian, dstAbsLaplaceImageGaussian; // 有高斯滤波的 Laplace 算子输出图和8-bit 输出图
+Mat dstLaplaceImage, dstAbsLaplaceImage; // 无高斯滤波的 Laplace 算子输出图和8-bit 输出图
 int laplaceKernelSize = 1; // Laplace 内核尺寸 = TrackBar 位置参数
 
 // Sobel 边缘检测相关参数
@@ -84,13 +85,15 @@ int main(int argc, const char * argv[]) {
     
     // 创建显示窗口
     namedWindow("the destination image of the Canny edge detection", WINDOW_AUTOSIZE);
-    namedWindow("the destination image of the Laplace edge detection", WINDOW_AUTOSIZE);
+    namedWindow("the destination image of the Laplace edge detection with Gaussian", WINDOW_AUTOSIZE); // 有高斯降噪
+    namedWindow("the destination image of the Laplace edge detection without Gaussian", WINDOW_AUTOSIZE); // 无高斯降噪
     namedWindow("the destination image of the Sobel edge detection", WINDOW_AUTOSIZE);
     namedWindow("the destination image of the Scharr filter", WINDOW_AUTOSIZE);
     
     // 创建 TrackBar
     createTrackbar("Parameter Values", "the destination image of the Canny edge detection", &cannyLowThreshold, 120, onCanny);
-    createTrackbar("Parameter Values", "the destination image of the Laplace edge detection", &laplaceKernelSize, 3, onLaplace);
+    createTrackbar("Parameter Values", "the destination image of the Laplace edge detection with Gaussian", &laplaceKernelSize, 3, onLaplace); // 有高斯降噪
+    createTrackbar("Parameter Values", "the destination image of the Laplace edge detection without Gaussian", &laplaceKernelSize, 3, onLaplace); // 无高斯降噪
     createTrackbar("Parameter Values", "the destination image of the Sobel edge detection", &sobelKernelSize, 3, onSobel);
     
     // 调用回调函数
@@ -157,13 +160,16 @@ static void onLaplace(int, void *)
     GaussianBlur( srcGrayImage, srcGrayImageBlur, Size(3,3), 0,0);
     
     // 使用 Laplace 算子
-    Laplacian(srcGrayImageBlur, dstLaplaceImage, CV_16S, laplaceKernelSize*2+1, 1, 0);
+    Laplacian(srcGrayImageBlur, dstLaplaceImageGaussian, CV_16S, laplaceKernelSize*2+1, 1, 0); // 有高斯降噪
+    Laplacian(srcGrayImage, dstLaplaceImage, CV_16S, laplaceKernelSize*2+1, 1, 0); // 未高斯降噪使用 Laplace 算子
     
     // 计算绝对值，并将结果转化为8-bit
-    convertScaleAbs(dstLaplaceImage, dstAbsLaplaceImage);
+    convertScaleAbs(dstLaplaceImage, dstAbsLaplaceImage); // 无高斯降噪
+    convertScaleAbs(dstLaplaceImageGaussian, dstAbsLaplaceImageGaussian); //有高斯降噪
     
     // 显示效果图
-    imshow("the destination image of the Laplace edge detection", dstAbsLaplaceImage);
+    imshow("the destination image of the Laplace edge detection without Gaussian", dstAbsLaplaceImage); // 无高斯降噪
+    imshow("the destination image of the Laplace edge detection with Gaussian", dstAbsLaplaceImageGaussian); //有高斯降噪
 }
 
 
